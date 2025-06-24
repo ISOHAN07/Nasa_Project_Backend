@@ -16,8 +16,6 @@ app.use(morgan("combined"));
 
 app.use(express.json());
 app.use(planetsRouter);
-app.use('/launches',launchesRouter);
+app.use("/launches", launchesRouter);
 
-module.exports = {
-  app,
-};
+module.exports = app;
