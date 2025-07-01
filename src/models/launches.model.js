@@ -1,5 +1,5 @@
+// const launches = require('./launches.mongo');
 const launches = new Map();
-// mongoDB_pwd = 2YzydGtCVjJPJyUw
 
 let latestFlightNumber = 100;
 
