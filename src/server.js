@@ -4,6 +4,7 @@ const app = require("./app");
 const PORT = process.env.PORT || 8000;
 
 const { loadPlanetsData } = require("./models/planets.model");
+const { loadLaunchData } = require("./models/launches.model");
 
 const MONGO_URL =
   "mongodb+srv://NASA_API:2YzydGtCVjJPJyUw@cluster0.mkccrjq.mongodb.net/nasa-api?retryWrites=true&w=majority&appName=Cluster0";
@@ -19,6 +20,7 @@ async function startServer() {
     console.log("MongoDB Connected");
 
     await loadPlanetsData();
+    await loadLaunchData();
 
     server.listen(PORT, () => {
       console.log(`Listening on port ${PORT}...`);
@@ -27,6 +29,5 @@ async function startServer() {
     console.error("MongoDB connection error", err);
   }
 }
-
 
 startServer();
