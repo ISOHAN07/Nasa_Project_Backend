@@ -21,11 +21,12 @@ saveLaunch(launch);
 
 const SPACEX_API_URL = "https://api.spacexdata.com/v4/launches/query";
 
-async function loadLaunchData() {
+async function downloadLaunch() {
   console.log("downloading launch data");
   const response = await axios.post(SPACEX_API_URL, {
     query: {},
     options: {
+      pagination: false,
       populate: [
         {
           path: "rocket",
@@ -42,6 +43,12 @@ async function loadLaunchData() {
       ],
     },
   });
+
+  if(response.status !== 200){
+    console.log('Problem loading the downloaded data');
+    throw new Error('Launch data download failed!');
+  }
+
   const launchDocs = response.data.docs;
   for (const launchDoc of launchDocs) {
     const payloads = launchDoc["payloads"];
@@ -58,13 +65,32 @@ async function loadLaunchData() {
       upcoming: launchDoc["upcoming"],
       success: launchDoc["success"],
     };
-
     console.log(`${launch.flightNumber} and ${launch.mission}`);
+
+    await saveLaunch(launch);
   }
 }
 
+async function loadLaunchData() {
+  const firstLaunch = await findLaunch({
+    flightNumber: 1,
+    rocket: "Falcon 1",
+    mission: "FalconSat",
+  });
+
+  if (firstLaunch) {
+    console.log("Already exists!");
+  } else {
+    await downloadLaunch();
+  }
+}
+
+async function findLaunch(filter) {
+  return await launches.findOne(filter);
+}
+
 async function existLaunchWithId(launchId) {
-  return await launches.findOne({
+  return await findLaunch({
     flightNumber: launchId,
   });
 }
@@ -92,14 +118,6 @@ async function getAllLaunches() {
 }
 
 async function saveLaunch(launch) {
-  const planet = await planets.findOne({
-    planetName: launch.target,
-  });
-
-  if (!planet) {
-    throw new Error("No matching planet found");
-  }
-
   await launches.findOneAndUpdate(
     {
       flightNumber: launch.flightNumber,
@@ -112,6 +130,14 @@ async function saveLaunch(launch) {
 }
 
 async function scheduleLaunch(launch) {
+  const planet = await planets.findOne({
+    planetName: launch.target,
+  });
+
+  if (!planet) {
+    throw new Error("No matching planet found");
+  }
+
   const newFlightNumber = (await getLatestFlightNumber()) + 1;
 
   const newLauch = {
